@@ -1,0 +1,118 @@
+<html>
+<head>
+	<title>Cell Automata Blob Gen Thing</title>
+</head>
+<body>
+	<canvas id="myCanvas" width="2000" height = "2000" style="border:1px solid #000000">Browser does not support canvas element, use firefox you caveman!</canvas>
+	<script>
+		class Biome {
+			constructor(zone) {
+				this.zones = new Array(zone);
+				this.color = randomColorCode();
+			}
+			draw() {
+				this.zones.forEach(a => drawSquare(a, this.color));
+			}
+			neighbours() {
+				let all_neighbours = new Array();
+				this.zones.forEach(z => {
+					all_neighbours.push(z.map((x, i) => x + [1, 0][i]));
+					all_neighbours.push(z.map((x, i) => x + [0, 1][i]));
+					all_neighbours.push(z.map((x, i) => x + [-1, 0][i]));
+					all_neighbours.push(z.map((x, i) => x + [0, -1][i]));
+				});
+				return all_neighbours;
+			}
+		}
+
+		var c = document.getElementById("myCanvas");
+		var ctx = c.getContext("2d");
+		
+		const SQUARE_SIZE = 25;
+		const GRID_SIZE = [32, 18];
+		const BIOME_SIZE = 12;
+		const NUM_BIOMES = Math.floor((GRID_SIZE[0]*GRID_SIZE[1])/BIOME_SIZE);
+		
+		c.setAttribute("width", SQUARE_SIZE*GRID_SIZE[0]);
+		c.setAttribute("height", SQUARE_SIZE*GRID_SIZE[1]);
+		
+		let biome_list = new Array();
+		let valid_squares = new Array();
+		
+		setup();
+		setInterval(grow, 100);
+
+		function setup() {
+			//Populate the valid squares list
+			for (let x = 0; x < GRID_SIZE[0]; x++) {
+				for (let y = 0; y < GRID_SIZE[1]; y++) {
+					valid_squares.push([x, y]);
+				}
+			}
+			
+			//Generate biomes with unique seed zones
+			for (let i = 0; i < NUM_BIOMES; i++) {
+				let square = valid_squares[randomInt(0, valid_squares.length -1)];
+				valid_squares = arrayRemove(valid_squares, square);
+				biome_list.push(new Biome(square));
+				biome_list[biome_list.length -1].draw();
+			}
+		}
+		
+		function grow() {
+			if (valid_squares.length > 0) {
+				biome_list.forEach(b => {
+					let n = b.neighbours();
+					let candidates = n.filter(z => {
+						return valid_squares.some(w => arrayEquals(z, w));
+					});
+					
+					if (candidates.length <= 0) return;
+					
+					//Expand biome
+					let zone = candidates[randomInt(0, candidates.length -1)];
+					valid_squares = arrayRemove(valid_squares, zone);
+					b.zones.push(zone);
+					b.draw();
+				});
+			}
+		}
+		
+		function drawSquare(pos, color = 'red') {
+			let x = pos[0] * SQUARE_SIZE;
+			let y = pos[1] * SQUARE_SIZE;
+			ctx.save();
+			ctx.fillStyle = color;
+			ctx.translate(x, y);
+			ctx.fillRect(0, 0, SQUARE_SIZE, SQUARE_SIZE);
+			ctx.restore();
+		}
+		
+		function randomInt(a, b) {
+			return Math.floor(Math.random()*b + a);
+		}
+		
+		function arrayRemove(arr, value) { 
+			return arr.filter(function(ele){ 
+				return !arrayEquals(ele, value);
+			});
+		}
+		
+		function arrayEquals(a, b) {
+			return Array.isArray(a) &&
+			Array.isArray(b) &&
+			a.length === b.length &&
+			a.every((val, index) => val === b[index]);
+		}
+		
+		function randomColorCode() {
+			var makeColorCode = '0123456789ABCDEF';
+			var code = '#';
+			for (var count = 0; count < 6; count++) {
+				code = code + makeColorCode[Math.floor(Math.random() * 16)];
+			}
+			return code;
+		}
+	</script>
+</body>
+</html>
