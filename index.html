@@ -3,6 +3,7 @@
 	<title>Cell Automata Blob Gen Thing</title>
 </head>
 <body style="background-color:whitesmoke;">
+	<h1>Cellular Zone Geration</h1>
 	<canvas id="myCanvas" width="2000" height = "2000" style="border:4px solid #000000; background-color: white;">Browser does not support canvas element, use firefox you caveman!</canvas>
 	<script>
 		class Biome {
@@ -77,11 +78,11 @@
 						b.zones.forEach((z) => {
 							sum_manhatten += diff(c[0],z[0]) + diff(c[1], z[1]);
 						});
-						candidate_weights[i] = sum_manhatten/b.zones.length; //average manhatten from each zone in the biome
+						candidate_weights[i] = sum_manhatten;
 						candidate_weights_total += candidate_weights[i];
 					});
 
-					let highest_index = candidate_weights.lastIndexOf(Math.max(candidate_weights));
+					let highest_index = candidate_weights.lastIndexOf(Math.min(...candidate_weights));
 					
 					//Expand biome
 					//let zone = candidates[randomInt(0, candidates.length -1)]; //Random
@@ -91,6 +92,23 @@
 					b.draw();
 				});
 			}
+		}
+
+		function randn_bm(min, max, skew) {
+			let u = 0, v = 0;
+			while(u === 0) u = Math.random() //Converting [0,1) to (0,1)
+			while(v === 0) v = Math.random()
+			let num = Math.sqrt( -2.0 * Math.log( u ) ) * Math.cos( 2.0 * Math.PI * v )
+			
+			num = num / 10.0 + 0.5 // Translate to 0 -> 1
+			if (num > 1 || num < 0) {
+				num = randn_bm(min, max, skew) // resample between 0 and 1 if out of range
+			} else {
+				num = Math.pow(num, skew) // Skew
+				num *= max - min // Stretch to fill range
+				num += min // offset to min
+			}
+			return num
 		}
 
 		function diff (a, b) {
