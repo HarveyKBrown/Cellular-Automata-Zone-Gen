@@ -66,16 +66,35 @@
 					let candidates = n.filter(z => {
 						return valid_squares.some(w => arrayEquals(z, w));
 					});
-					
+
 					if (candidates.length <= 0) return;
+
+					let candidate_weights = new Array(candidates.length);
+					let candidate_weights_total = 0;
+
+					let sum_manhatten = 0;
+					candidates.forEach((c, i) => {
+						b.zones.forEach((z) => {
+							sum_manhatten += diff(c[0],z[0]) + diff(c[1], z[1]);
+						});
+						candidate_weights[i] = sum_manhatten/b.zones.length; //average manhatten from each zone in the biome
+						candidate_weights_total += candidate_weights[i];
+					});
+
+					let highest_index = candidate_weights.lastIndexOf(Math.max(candidate_weights));
 					
 					//Expand biome
-					let zone = candidates[randomInt(0, candidates.length -1)];
+					//let zone = candidates[randomInt(0, candidates.length -1)]; //Random
+					let zone = candidates[highest_index]; //Top manhatten
 					valid_squares = arrayRemove(valid_squares, zone);
 					b.zones.push(zone);
 					b.draw();
 				});
 			}
+		}
+
+		function diff (a, b) {
+			return Math.abs(a - b);
 		}
 		
 		function drawSquare(pos, color = 'red') {
